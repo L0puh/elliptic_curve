@@ -1,9 +1,11 @@
 #include "elliptic_curve.h"
 
 int main() 
-{
-    if (!glfwInit())
-        return 1;
+{   
+    App app; 
+    app.init_app();
+    app.run_app();
 
     return 0;
 }
+
