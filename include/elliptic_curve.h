@@ -23,6 +23,7 @@ class App {
         void init_app();
         void run_app();
         void menu();
+        void main_window();
 };
 
 #endif

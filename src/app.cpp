@@ -1,6 +1,9 @@
 #include "elliptic_curve.h"
 #include "imgui.h"
 #include <fstream>
+#include "imgui_internal.h"
+
+#define IMGUI_DEFINE_MATH_OPERATORS 
 
 App::App(){
     if (!glfwInit())
@@ -43,12 +46,30 @@ void App::run_app(){
         ImGui::NewFrame();
 
         menu(); 
+        main_window();
 
         ImGui::Render();
         glClear(GL_COLOR_BUFFER_BIT);
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
        
         glfwSwapBuffers(window);
+    }
+}
+
+void App::main_window(){
+    ImGuiIO& io = ImGui::GetIO();
+    ImGui::SetNextWindowPos(ImVec2(io.DisplaySize.x * 0.5f, io.DisplaySize.y * 0.5f), 
+            ImGuiCond_Always, ImVec2(0.5f, 0.5f));
+    ImGui::SetNextWindowSize(ImVec2(400, 400), ImGuiCond_Always);
+    {
+    ImGui::Begin("main", 0, flags);
+    ImDrawList* draw_list= ImGui::GetWindowDrawList();
+    ImVec4 colf = ImVec4(1.0f, 1.0f, 0.4f, 8.0f);
+    ImGui::Text("curve");
+    ImVec2 p = ImGui::GetCursorScreenPos();
+    draw_list->AddLine(ImVec2(p.x * 13.0f, p.y * 14.0f), ImVec2(4.0f, 6.0f), ImColor(colf), 4.0f);
+    //TODO: change to curve
+    ImGui::End();
     }
 }
 
