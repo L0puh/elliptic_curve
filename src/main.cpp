@@ -2,7 +2,7 @@
 
 int main() 
 {   
-    App app; 
+    App app(600,600); 
     app.init_app();
     app.run_app();
 

@@ -1,6 +1,6 @@
 # if [ $1 = "debug" ];
-$FLAGS="DEBUG"
-if [ FLAGS="DEBUG" ]
+FLAGS="DEBUG"
+if [ $FLAGS = "DEBUG" ];
 then
     if [ ! -d "build" ];
     then 

@@ -1,15 +1,11 @@
 #include "elliptic_curve.h"
-#include "imgui.h"
-#include <fstream>
-#include "imgui_internal.h"
 
-#define IMGUI_DEFINE_MATH_OPERATORS 
-
-App::App(){
+App::App(int width, int height){
     if (!glfwInit())
         exit(1);
-    window = glfwCreateWindow(600, 600, "elliptic curve", nullptr, nullptr);
-    clear_colors = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
+    window = glfwCreateWindow(width, height, 
+            "elliptic curve", nullptr, nullptr);
+
     flags = 0;
     flags |= ImGuiWindowFlags_AlwaysAutoResize;
     flags |= ImGuiWindowFlags_NoMove;
@@ -51,24 +47,27 @@ void App::run_app(){
         ImGui::Render();
         glClear(GL_COLOR_BUFFER_BIT);
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
-       
         glfwSwapBuffers(window);
     }
 }
 
 void App::main_window(){
     ImGuiIO& io = ImGui::GetIO();
-    ImGui::SetNextWindowPos(ImVec2(io.DisplaySize.x * 0.5f, io.DisplaySize.y * 0.5f), 
+    ImGui::SetNextWindowPos(ImVec2(io.DisplaySize.x * 0.55f, io.DisplaySize.y * 0.45f), 
             ImGuiCond_Always, ImVec2(0.5f, 0.5f));
-    ImGui::SetNextWindowSize(ImVec2(400, 400), ImGuiCond_Always);
+    ImGui::SetNextWindowSize(ImVec2(ImGui::GetWindowWidth(), 
+                                    ImGui::GetWindowHeight()), 
+                                    ImGuiCond_None);
     {
     ImGui::Begin("main", 0, flags);
     ImDrawList* draw_list= ImGui::GetWindowDrawList();
-    ImVec4 colf = ImVec4(1.0f, 1.0f, 0.4f, 8.0f);
     ImGui::Text("curve");
     ImVec2 p = ImGui::GetCursorScreenPos();
-    draw_list->AddLine(ImVec2(p.x * 13.0f, p.y * 14.0f), ImVec2(4.0f, 6.0f), ImColor(colf), 4.0f);
-    //TODO: change to curve
+    draw_list->AddBezierCubic(io.MouseClickedPos[0],
+                              ImVec2(p.x+3, p.y+3),
+                              ImVec2(p.x+4, p.y+8), 
+                              io.MouseClickedPos[1], 
+                              ImColor(white), 2.0f, 32);
     ImGui::End();
     }
 }
@@ -81,39 +80,40 @@ void App::menu(){
                 text_flags = ImGuiInputTextFlags_AllowTabInput;
                 open_new_window=true;
             }
-            if(ImGui::MenuItem("close")){ 
-                 exit(0); 
-            }
+            if(ImGui::MenuItem("close")){ exit(0); }
             ImGui::EndMenu();
         }
         ImGui::EndMainMenuBar();
+
+        if(open_new_window)
+            save_file("file.txt");
+
         ImGui::End();
     }
-    if (open_new_window){
-
-            ImGui::Begin("file", &open_new_window, flags);
-            {
-                ImGui::OpenPopup("editor");
-                if(ImGui::BeginPopup("editor", ImGuiWindowFlags_AlwaysAutoResize)){
-                    static char buff[100] ={};
-                    ImGui::InputTextMultiline("text", buff, IM_ARRAYSIZE(buff), 
-                            ImVec2(-FLT_MIN, ImGui::GetTextLineHeight()*16), 
-                            text_flags);
-                    if (ImGui::Button("save")){
-                        text_flags|=ImGuiInputTextFlags_ReadOnly;
-                        if (*buff){
-                            std::ofstream file("file.txt");
-                            if (file.is_open()){
-                                file << buff << "\n";
-                                file.close();
-                                }
-                            }
-                        ImGui::CloseCurrentPopup();
-                        open_new_window=false;
+    }
+void App::save_file(const char* filename){
+    ImGui::Begin("file", &open_new_window, flags);
+    {
+        ImGui::OpenPopup("editor");
+        if(ImGui::BeginPopup("editor", ImGuiWindowFlags_AlwaysAutoResize)){
+            static char buff[400] ={};
+            ImGui::InputTextMultiline("text", buff, IM_ARRAYSIZE(buff), 
+                    ImVec2(300.0f, 300.0f), 
+                    text_flags);
+            if (ImGui::Button("save")){
+                text_flags|=ImGuiInputTextFlags_ReadOnly;
+                if (*buff){
+                    std::ofstream file(filename);
+                    if (file.is_open()){
+                        file << buff << "\n";
+                        file.close();
                         }
-                ImGui::EndPopup();
+                    }
+                ImGui::CloseCurrentPopup();
+                open_new_window=false;
                 }
-            ImGui::End();
-            }
+        ImGui::EndPopup();
+        }
+    ImGui::End();
     }
-    }
+}
