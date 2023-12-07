@@ -19,7 +19,7 @@ class App {
         // colors 
         ImVec4 white = ImVec4(255.0f, 255.0f, 255.0f, 1.0f);
         ImVec4 black = ImVec4(0.0f, 0.0f, 0.0f, 1.0f);
-        ImVec4 blue = ImVec4(60.0f, 0.0f, 173.0f, 1.0f);
+        ImVec4 pink = ImVec4(60.0f, 0.0f, 173.0f, 1.0f);
 
         GLFWwindow *window;
         bool open_new_window;
@@ -31,7 +31,7 @@ class App {
         void save_file(const char* namefile);
         void menu();
         void main_window();
-
+        void draw_ecc(ImDrawList* drawList, float startX, float endX, float stepSize, ImVec2 center);
     public:
         void init_app();
         void run_app();

@@ -1,4 +1,6 @@
 #include "elliptic_curve.h"
+#include "imgui.h"
+#include <vector>
 
 App::App(int width, int height){
     if (!glfwInit())
@@ -51,26 +53,59 @@ void App::run_app(){
     }
 }
 
+void App::draw_ecc(ImDrawList* drawList, float startX, float endX, float stepSize, ImVec2 center)
+{
+
+//FIXME
+    float a = 3.0f; 
+    float b = 3.0f; 
+    float p = 407.0f; 
+
+    std::vector<ImVec2> points;
+    for (float x = startX; x <= endX; x += stepSize)
+    {
+        float y_squared = std::fmod(std::pow(x, 3) + a * x + b, p);
+        float y = std::sqrt(y_squared);
+        points.push_back({ x, y });
+    }
+    for (size_t i = 1; i < points.size(); ++i)
+    {
+        const ImVec2& p1 = ImVec2(center.x + points[i - 1].x, center.y - points[i - 1].y);
+        const ImVec2& p2 = ImVec2(center.x + points[i].x, center.y - points[i].y);
+        drawList->AddLine(p1, p2, ImColor(pink) ); 
+    }
+}
+
 void App::main_window(){
     ImGuiIO& io = ImGui::GetIO();
-    ImGui::SetNextWindowPos(ImVec2(io.DisplaySize.x * 0.55f, io.DisplaySize.y * 0.45f), 
-            ImGuiCond_Always, ImVec2(0.5f, 0.5f));
-    ImGui::SetNextWindowSize(ImVec2(ImGui::GetWindowWidth(), 
-                                    ImGui::GetWindowHeight()), 
-                                    ImGuiCond_None);
+    ImVec2 center = ImGui::GetMainViewport()->GetCenter();
+    ImGui::SetNextWindowPos(center, ImGuiCond_Always, ImVec2(0.5f, 0.5f));
+    ImGui::SetNextWindowSize(ImVec2(550, 550), ImGuiCond_Always);
     {
     ImGui::Begin("main", 0, flags);
     ImDrawList* draw_list= ImGui::GetWindowDrawList();
     ImGui::Text("curve");
     ImVec2 p = ImGui::GetCursorScreenPos();
-    draw_list->AddBezierCubic(io.MouseClickedPos[0],
-                              ImVec2(p.x+3, p.y+3),
-                              ImVec2(p.x+4, p.y+8), 
-                              io.MouseClickedPos[1], 
-                              ImColor(white), 2.0f, 32);
+    ImVec2 s = ImGui::GetMainViewport()->Pos;
+    float x = center.x;
+    float y = p.y;
+    draw_list->AddLine(ImVec2(x, y), ImVec2(x, y * 6.0f), ImColor(white), 2.0f); // vertical
+    draw_list->AddLine(ImVec2(p.x, center.y), ImVec2(x * 6.0f, center.y), ImColor(white), 2.0f); // horizontal
+    int func[5];
+    for (int i = 0; i < 5; i++){
+       func[i] = std::pow(y, 2) - std::pow(x, 3) - x *(-1) - 1;
+    }
+    float startX = -40.0f;
+    float endX = 40.0f;
+    float stepSize = 40.0f;
+
+    draw_ecc(draw_list, startX, endX, stepSize, center);
+
     ImGui::End();
     }
 }
+
+
 
 void App::menu(){
     ImGui::Begin("menu", 0, flags);
@@ -90,7 +125,7 @@ void App::menu(){
 
         ImGui::End();
     }
-    }
+}
 void App::save_file(const char* filename){
     ImGui::Begin("file", &open_new_window, flags);
     {
