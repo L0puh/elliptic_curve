@@ -9,6 +9,7 @@
 #include <imgui.h>
 #include <imgui_impl_glfw.h>
 #include <imgui_impl_opengl3.h>
+#include <vector>
 #include "imgui_internal.h"
 
 class App {
@@ -31,7 +32,8 @@ class App {
         void save_file(const char* namefile);
         void menu();
         void main_window();
-        void draw_ecc(ImDrawList* drawList, float startX, float endX, float stepSize, ImVec2 center);
+        void draw_ecc(std::vector<ImVec2> points, ImVec2 pos);
+        std::vector<ImVec2> get_poinst(float *start, float *end, float smooth);
     public:
         void init_app();
         void run_app();
