@@ -1,5 +1,7 @@
 #include "elliptic_curve.h"
 #include "imgui.h"
+#include <cmath>
+#include <cstdio>
 #include <vector>
 
 App::App(int width, int height){
@@ -54,54 +56,75 @@ void App::run_app(){
 }
 
 void App::draw_ecc(ImDrawList* drawList, float startX, float endX, float stepSize, ImVec2 center)
-{
-
-//FIXME
-    float a = 3.0f; 
-    float b = 3.0f; 
-    float p = 407.0f; 
-
-    std::vector<ImVec2> points;
-    for (float x = startX; x <= endX; x += stepSize)
+{   
+    ImGui::BeginChild("curve", ImGui::GetWindowSize(), true, flags);
     {
-        float y_squared = std::fmod(std::pow(x, 3) + a * x + b, p);
-        float y = std::sqrt(y_squared);
-        points.push_back({ x, y });
+        static float sz = 20.0f;
+        static float a = -1.0f; 
+        static float b = 1.0f; 
+        ImGuiIO& ii = ImGui::GetIO();
+        std::vector<ImVec2> points;
+        std::vector<ImVec2> points_neg;
+
+        ImGui::SliderFloat("size", &sz, -100.0f, 100.0f, "%.3f");
+        ImGui::SliderFloat("a", &a, -5.0f, 5.0f, "%.3f");
+        ImGui::SliderFloat("b", &b, -5.0f, 5.0f, "%.3f");
+        ImGui::SliderFloat("start x", &startX, -5.0f, 5.0f, "%.3f");
+        ImGui::SliderFloat("end x", &endX, -5.0f, 5.0f, "%.3f");
+        for (float x = startX; x >= endX; x -= stepSize)
+        {
+            float y_sqr = std::pow(x, 3) + a * x + b;
+            if (y_sqr < 0) 
+                y_sqr*=-1;
+            float y=std::sqrt(y_sqr);
+            points.push_back({ x, y });
+        }
+        // mirror of curve
+        for (size_t i = 1; i < points.size(); ++i){
+            if (points.at(i).y > 0){
+                points_neg.push_back({points.at(i).x, -(points.at(i).y)});
+            }
+        }
+        ImVec4 color = white;
+        for (size_t i = 1; i < points.size(); ++i)
+        {
+            const ImVec2& p1 = ImVec2(center.x + points[i - 1].x * sz, center.y - points[i - 1].y * sz);
+            const ImVec2& p2 = ImVec2(center.x + points[i].x * sz, center.y - points[i].y * sz);
+            if (points.at(i).y > 0){
+                drawList->AddLine(p1, p2, ImColor(color), 3.0f ); 
+                ImGui::Text("p2: %0.4f, %0.4f", p2.x, p2.y);
+                ImGui::Text("p1: %0.4f, %0.4f", p1.x, p1.y);
+                }
+            }
+        for (size_t i =1; i < points_neg.size(); i++){
+            printf("%0.3f, %0.3f\n", points_neg.at(i).x, points_neg.at(i).y);
+            const ImVec2& p1 = ImVec2(center.x + points_neg[i - 1].x * sz, center.y - points_neg[i - 1].y * sz);
+            const ImVec2& p2 = ImVec2(center.x + points_neg[i].x * sz, center.y - points_neg[i].y * sz);
+           drawList->AddLine(p1, p2, ImColor(color), 3.0f ); 
+        }
     }
-    for (size_t i = 1; i < points.size(); ++i)
-    {
-        const ImVec2& p1 = ImVec2(center.x + points[i - 1].x, center.y - points[i - 1].y);
-        const ImVec2& p2 = ImVec2(center.x + points[i].x, center.y - points[i].y);
-        drawList->AddLine(p1, p2, ImColor(pink) ); 
-    }
+    ImGui::EndChild();
 }
+
 
 void App::main_window(){
     ImGuiIO& io = ImGui::GetIO();
+    float startX = 2.0f;
+    float endX = -1.325f;
+    float stepSize = 0.1f;
     ImVec2 center = ImGui::GetMainViewport()->GetCenter();
     ImGui::SetNextWindowPos(center, ImGuiCond_Always, ImVec2(0.5f, 0.5f));
-    ImGui::SetNextWindowSize(ImVec2(550, 550), ImGuiCond_Always);
     {
-    ImGui::Begin("main", 0, flags);
-    ImDrawList* draw_list= ImGui::GetWindowDrawList();
-    ImGui::Text("curve");
-    ImVec2 p = ImGui::GetCursorScreenPos();
-    ImVec2 s = ImGui::GetMainViewport()->Pos;
-    float x = center.x;
-    float y = p.y;
-    draw_list->AddLine(ImVec2(x, y), ImVec2(x, y * 6.0f), ImColor(white), 2.0f); // vertical
-    draw_list->AddLine(ImVec2(p.x, center.y), ImVec2(x * 6.0f, center.y), ImColor(white), 2.0f); // horizontal
-    int func[5];
-    for (int i = 0; i < 5; i++){
-       func[i] = std::pow(y, 2) - std::pow(x, 3) - x *(-1) - 1;
-    }
-    float startX = -40.0f;
-    float endX = 40.0f;
-    float stepSize = 40.0f;
+        ImGui::Begin("main", 0, flags);
+        ImDrawList* draw_list= ImGui::GetWindowDrawList();
+        ImGui::Text("curve");
+        ImVec2 p = ImGui::GetCursorScreenPos();
+        ImVec2 s = ImGui::GetMainViewport()->Pos;
+        float x = center.x;
+        float y = p.y;
+        draw_ecc(draw_list, startX, endX, stepSize, center);
 
-    draw_ecc(draw_list, startX, endX, stepSize, center);
-
-    ImGui::End();
+        ImGui::End();
     }
 }
 
